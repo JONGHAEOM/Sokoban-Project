@@ -46,56 +46,55 @@ while (true)
     {
        
         playerX = Math.Min(playerX + 1, 15);
-        
+        if (boxX == 15 && boxY == playerY)
+        {
+            playerX = boxX - 1;
+        }
+
     }
     else if(Key == ConsoleKey.LeftArrow)
     {
         playerX = Math.Max(playerX - 1, 0);
-        
+        if (boxX == 0 && boxY == playerY)
+        {
+            playerX = boxX + 1;
+        }
+
     }
     else if(Key == ConsoleKey.DownArrow)
     {
         playerY = Math.Min(playerY + 1, 15);
+        if (boxY == 15 && boxX == playerX)
+        {
+            playerY = boxY - 1;
+        }
 
     }
     else if(Key == ConsoleKey.UpArrow)
     {
         playerY = Math.Max(playerY - 1, 0);
-        
+        if (boxY == 15 && boxX == playerX)
+        {
+            playerY = boxY + 1;
+        }
     }
     if (playerX + 1 == boxX && playerY == boxY)
     {
-        boxX = Math.Min(boxX + 1, 15);
-        if (boxX==15)
-        {
-            playerX = boxX - 2;
-        }
+        boxX = Math.Min(boxX + 1, 15);    
     }
     if (playerX - 1 == boxX && playerY == boxY)
     {
         boxX = Math.Max(boxX - 1, 0);
-        if (boxX == 0)
-        {
-            playerX = boxX + 2;
-        }
     }
 
     if (playerX == boxX && playerY + 1 == boxY)
     {
         boxY = Math.Min(boxY + 1, 15);
-        if (boxY==15)
-        {
-            playerY = boxY - 2;
-        }
     }
     
     if (playerX == boxX && playerY - 1 == boxY)
     {
         boxY = Math.Max(boxY - 1, 0);
-        if (boxY== 0)
-        {
-            playerY = boxY - 2;
-        }
     }
 }
 
