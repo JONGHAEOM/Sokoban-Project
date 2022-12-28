@@ -73,26 +73,30 @@ while (true)
     else if(Key == ConsoleKey.UpArrow)
     {
         playerY = Math.Max(playerY - 1, 0);
-        if (boxY == 15 && boxX == playerX)
+        if (boxY == 0 && boxX == playerX)
         {
             playerY = boxY + 1;
         }
     }
-    if (playerX + 1 == boxX && playerY == boxY)
+
+    //box의 이동
+
+    if (playerX + 1 == boxX && playerY == boxY && Key == ConsoleKey.RightArrow)
     {
+
         boxX = Math.Min(boxX + 1, 15);    
     }
-    if (playerX - 1 == boxX && playerY == boxY)
+    if (playerX - 1 == boxX && playerY == boxY && Key == ConsoleKey.LeftArrow)
     {
         boxX = Math.Max(boxX - 1, 0);
     }
 
-    if (playerX == boxX && playerY + 1 == boxY)
+    if (playerX == boxX && playerY + 1 == boxY && Key == ConsoleKey.DownArrow)
     {
         boxY = Math.Min(boxY + 1, 15);
     }
     
-    if (playerX == boxX && playerY - 1 == boxY)
+    if (playerX == boxX && playerY - 1 == boxY && Key == ConsoleKey.UpArrow)
     {
         boxY = Math.Max(boxY - 1, 0);
     }
