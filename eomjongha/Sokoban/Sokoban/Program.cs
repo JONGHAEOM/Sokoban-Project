@@ -114,7 +114,7 @@ namespace Sokoban
 
                 if (Key == ConsoleKey.LeftArrow)
                 {
-                    playerX = Math.Max(Min_X, playerX - 1);
+                    playerX = Max(Min_X, playerX - 1);
                     playerMoveDirection = Direction.Left;
                 }
                 if (Key == ConsoleKey.RightArrow)
@@ -124,7 +124,7 @@ namespace Sokoban
                 }
                 if (Key == ConsoleKey.UpArrow)
                 {
-                    playerY = Math.Max(Min_Y, playerY - 1);
+                    playerY = Max(Min_Y, playerY - 1);
                     playerMoveDirection = Direction.Up;
                 }
                 if (Key == ConsoleKey.DownArrow)
@@ -177,7 +177,7 @@ namespace Sokoban
                         switch (playerMoveDirection)
                         {
                             case Direction.Left:
-                                boxPositionsX[i] = Math.Max(Min_X, boxPositionsX[i] - 1);
+                                boxPositionsX[i] = Max(Min_X, boxPositionsX[i] - 1);
                                 playerX = boxPositionsX[i] + 1;
                                 break;
 
@@ -189,7 +189,7 @@ namespace Sokoban
 
 
                             case Direction.Up:
-                                boxPositionsY[i] = Math.Max(Min_Y, boxPositionsY[i] - 1);
+                                boxPositionsY[i] = Max(Min_Y, boxPositionsY[i] - 1);
                                 playerY = boxPositionsY[i] + 1;
                                 break;
                             case Direction.Down:
@@ -320,7 +320,12 @@ namespace Sokoban
                         }
                     }
                 }
+                int Max (int a, int b)
+                {
+                    int result = (a > b) ? a : b;
 
+                    return result;
+                }
                 if (boxOnGaolCount == GOAL_COUNT)
                 {
                     Console.Clear();
