@@ -76,24 +76,20 @@ namespace Sokoban
                 Console.SetCursorPosition(playerX, playerY);
                 Console.Write("P");
 
+                Randerobject(playerX, playerY, "P");
 
                 //골을 그려준다
                 for (int goalId = 0; goalId < GOAL_COUNT; ++goalId)
                 {
-
-
-                    int goalX = goalPositionsX[goalId];
-                    int goalY = goalPositionsY[goalId];
-                    Console.SetCursorPosition(goalX, goalY);
-                    Console.Write("G");
-
+                    Randerobject(goalPositionsX[goalId], goalPositionsY[goalId], "G");
                 }
 
                 //박스를 그려준다 
                 for (int i = 0; i < boxPositionsX.Length; ++i)
                 {
-                    Console.SetCursorPosition(boxPositionsX[i], boxPositionsY[i]);
-                    Console.Write(isBoxOnGoal[i] ? "O" : "B");
+                    string boxsape = isBoxOnGoal[i] ? "O" : "B";
+                    Randerobject(boxPositionsX[i], boxPositionsY[i], boxsape);
+                   
                 }
                 //박스를 그릴때 판단하던 것을 골위에 박스가 존재하느지 체크할 떄 판단
                 //판단지점이 다름 -> 데이터 저장 박스를 그릴때 어떤 boㅐl 객체를 생성 =>배열로전환
@@ -101,10 +97,7 @@ namespace Sokoban
                 //벽을 그려준다
                 for (int wallId = 0; wallId < WALL_COUNT; ++wallId)
                 {
-                    int wallX = wallPositionsX[wallId];
-                    int wallY = wallPositionsY[wallId];
-                    Console.SetCursorPosition(wallX, wallY);
-                    Console.Write("W");
+                    Randerobject(wallPositionsX[wallId], wallPositionsY[wallId], "W");
                 }
 
                 // ProcessInput
@@ -119,7 +112,7 @@ namespace Sokoban
                 }
                 if (Key == ConsoleKey.RightArrow)
                 {
-                    playerX = Math.Min(Max_X, playerX + 1);
+                    playerX = Min(Max_X, playerX + 1);
                     playerMoveDirection = Direction.Right;
                 }
                 if (Key == ConsoleKey.UpArrow)
@@ -129,7 +122,7 @@ namespace Sokoban
                 }
                 if (Key == ConsoleKey.DownArrow)
                 {
-                    playerY = Math.Min(Max_Y, playerY + 1);
+                    playerY = Min(Max_Y, playerY + 1);
                     playerMoveDirection = Direction.Down;
                 }
                 // Math.Max 와 Min을 사용하는 이유는 내가 정한 공간에서 벗어날때를 위한것
@@ -183,7 +176,7 @@ namespace Sokoban
 
 
                             case Direction.Right:
-                                boxPositionsX[i] = Math.Min(boxPositionsX[i] + 1, Max_X);
+                                boxPositionsX[i] = Min(boxPositionsX[i] + 1, Max_X);
                                 playerX = boxPositionsX[i] - 1;
                                 break;
 
@@ -193,7 +186,7 @@ namespace Sokoban
                                 playerY = boxPositionsY[i] + 1;
                                 break;
                             case Direction.Down:
-                                boxPositionsY[i] = Math.Min(boxPositionsY[i] + 1, Max_Y);
+                                boxPositionsY[i] = Min(boxPositionsY[i] + 1, Max_Y);
                                 playerY = boxPositionsY[i] - 1;
                                 break;
                             default:
@@ -326,7 +319,31 @@ namespace Sokoban
 
                     return result;
                 }
-                if (boxOnGaolCount == GOAL_COUNT)
+                int Min (int a , int b)
+                {
+                    int result= (a < b) ? a : b;
+                    return result;
+                }
+                int VariadicMax(params int[] numbers)
+                {
+                    int result = numbers[0];
+                    for (int i =0; i< numbers.Length; ++i)
+                    {
+                        if (result < numbers[i])
+                        {
+                            result= numbers[i];
+                        }
+                    }
+                    return result;
+                }
+                void Randerobject(int x, int y ,string obj)
+                {
+                    Console.SetCursorPosition(x, y);
+                    Console.Write(obj);
+                }
+
+
+                    if (boxOnGaolCount == GOAL_COUNT)
                 {
                     Console.Clear();
                     Console.WriteLine("Clear");
