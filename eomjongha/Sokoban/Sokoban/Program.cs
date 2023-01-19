@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,15 +34,15 @@ namespace Sokoban
             const int GOAL_COUNT = 2;
 
 
-            int playerX = 0;
-            int playerY = 0;
+            int x = 0;
+            int y = 0;
 
             const int Max_X = 20;
             const int Max_Y = 10;
             const int Min_X = 0;
             const int Min_Y = 0;
 
-            Direction playerMoveDirection = Direction.None;
+            Direction moveDirection = Direction.None;
             //박스의 위치
             int[] boxPositionsX = { 5, 3 };
             int[] boxPositionsY = { 5, 3 };
@@ -67,230 +69,14 @@ namespace Sokoban
 
             while (true)
             {
-                // Render
-                // 이전 프레임을 지우는 것 이 루프 한번이 한 화면을 그리기 위한 과정 
-                Console.Clear();
-
-
-                // 플레이어를 그린다. 먼저 커서를 옮기고 
-                Console.SetCursorPosition(playerX, playerY);
-                Console.Write("P");
-
-                Randerobject(playerX, playerY, "P");
-
-                //골을 그려준다
-                for (int goalId = 0; goalId < GOAL_COUNT; ++goalId)
-                {
-                    Randerobject(goalPositionsX[goalId], goalPositionsY[goalId], "G");
-                }
-
-                //박스를 그려준다 
-                for (int i = 0; i < boxPositionsX.Length; ++i)
-                {
-                    string boxsape = isBoxOnGoal[i] ? "O" : "B";
-                    Randerobject(boxPositionsX[i], boxPositionsY[i], boxsape);
-                   
-                }
-                //박스를 그릴때 판단하던 것을 골위에 박스가 존재하느지 체크할 떄 판단
-                //판단지점이 다름 -> 데이터 저장 박스를 그릴때 어떤 boㅐl 객체를 생성 =>배열로전환
-
-                //벽을 그려준다
-                for (int wallId = 0; wallId < WALL_COUNT; ++wallId)
-                {
-                    Randerobject(wallPositionsX[wallId], wallPositionsY[wallId], "W");
-                }
+                Rander();
 
                 // ProcessInput
                 ConsoleKey Key = Console.ReadKey().Key;
 
                 // Update
-
-                if (Key == ConsoleKey.LeftArrow)
-                {
-                    playerX = Max(Min_X, playerX - 1);
-                    playerMoveDirection = Direction.Left;
-                }
-                if (Key == ConsoleKey.RightArrow)
-                {
-                    playerX = Min(Max_X, playerX + 1);
-                    playerMoveDirection = Direction.Right;
-                }
-                if (Key == ConsoleKey.UpArrow)
-                {
-                    playerY = Max(Min_Y, playerY - 1);
-                    playerMoveDirection = Direction.Up;
-                }
-                if (Key == ConsoleKey.DownArrow)
-                {
-                    playerY = Min(Max_Y, playerY + 1);
-                    playerMoveDirection = Direction.Down;
-                }
-                // Math.Max 와 Min을 사용하는 이유는 내가 정한 공간에서 벗어날때를 위한것
-                //박스 옮기는 식 => 박스-> 박스의 좌표를 바꾼다.
-
-                for (int i = 0; i < WALL_COUNT; ++i)
-                {
-                    int wallX = wallPositionsX[i];
-                    int wallY = wallPositionsY[i];
-
-                    if (playerX == wallX && playerY == wallY)
-                        switch (playerMoveDirection)
-                        {
-                            case Direction.Left:
-                                playerX = wallX + 1;
-                                break;
-                            case Direction.Right:
-                                playerX = wallX - 1;
-                                break;
-                            case Direction.Up:
-                                playerY = wallY + 1;
-                                break;
-                            case Direction.Down:
-                                playerY = wallY - 1;
-                                break;
-                            default:
-                                Console.Clear();
-                                Console.WriteLine($"[Error] 플레이오 이동 방향 데이터가 오류입니다.: {playerMoveDirection}");
-
-                                break;
-                        }
-
-                }
-
-
-                //플레이어가 박스에 닿았을때 --일단 기술부채 1월 18일 상환 
-                for (int i = 0; i < boxPositionsX.Length; ++i)
-                {
-                    if (playerX != boxPositionsX[i] || playerY != boxPositionsY[i])
-                    {
-                        continue;
-                    }
-                    if (boxPositionsX[i] == playerX && boxPositionsY[i] == playerY)
-                    {
-                        switch (playerMoveDirection)
-                        {
-                            case Direction.Left:
-                                boxPositionsX[i] = Max(Min_X, boxPositionsX[i] - 1);
-                                playerX = boxPositionsX[i] + 1;
-                                break;
-
-
-                            case Direction.Right:
-                                boxPositionsX[i] = Min(boxPositionsX[i] + 1, Max_X);
-                                playerX = boxPositionsX[i] - 1;
-                                break;
-
-
-                            case Direction.Up:
-                                boxPositionsY[i] = Max(Min_Y, boxPositionsY[i] - 1);
-                                playerY = boxPositionsY[i] + 1;
-                                break;
-                            case Direction.Down:
-                                boxPositionsY[i] = Min(boxPositionsY[i] + 1, Max_Y);
-                                playerY = boxPositionsY[i] - 1;
-                                break;
-                            default:
-                                Console.Clear();
-                                Console.WriteLine($"[Error] 플레이오 이동 방향 데이터가 오류입니다.: {playerMoveDirection}");
-
-                                break;
-                        }
-                        pushedBoxId = i;
-
-                    }
-                    boxPositionsX[i] = boxPositionsX[i];
-                    boxPositionsY[i] = boxPositionsY[i];
-                    //swith문 사용가능
-                    // 박스가 벽에 닿았을때 막히는 부분
-
-                }
-
-
-
-                // 박스가 벽에 닿았을때   -- 기술부채 1월 18일 상환
-                for (int i = 0; i < WALL_COUNT; ++i)
-                {
-                    if (boxPositionsX[pushedBoxId] != wallPositionsX[i] || boxPositionsY[pushedBoxId] != wallPositionsY[i])
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        switch (playerMoveDirection)
-                        {
-                            case Direction.Left:
-                                boxPositionsX[pushedBoxId] = wallPositionsX[i] + 1;
-                                playerX = boxPositionsX[pushedBoxId] + 1;
-                                break;
-                            case Direction.Right:
-                                boxPositionsX[pushedBoxId] = wallPositionsX[i] - 1;
-                                playerX = boxPositionsX[pushedBoxId] - 1;
-                                break;
-                            case Direction.Up:
-                                boxPositionsY[pushedBoxId] = wallPositionsY[i] + 1;
-                                playerY = boxPositionsY[pushedBoxId] + 1;
-                                break;
-                            case Direction.Down:
-                                boxPositionsY[pushedBoxId] = wallPositionsY[i] - 1;
-                                playerY = boxPositionsY[pushedBoxId] - 1;
-                                break;
-                            default:
-                                Console.Clear();
-                                Console.WriteLine($"[Error] 플레이오 이동 방향 데이터가 오류입니다.: {playerMoveDirection}");
-
-                                return;
-
-
-                        }
-                        break;
-
-
-                    }
-
-
-                }
-
-
-
-
-
-
-                // 박스 1을 밀어서 박스 2에 닿은 건지, 박스 2를 밀어서 박스 1에 닿은건지?
-                for (int collidedBoxId = 0; collidedBoxId < boxPositionsX.Length; ++collidedBoxId)
-                {
-                    if (pushedBoxId == collidedBoxId)
-                    {
-                        continue;
-                    }
-                    else if (boxPositionsX[pushedBoxId] == boxPositionsX[collidedBoxId] && boxPositionsY[pushedBoxId] == boxPositionsY[collidedBoxId])
-                    {
-                        switch (playerMoveDirection)
-                        {
-                            case Direction.Left:
-                                boxPositionsX[pushedBoxId] = boxPositionsX[collidedBoxId] + 1;
-                                playerX = boxPositionsX[pushedBoxId] + 1;
-                                break;
-                            case Direction.Right:
-                                boxPositionsX[pushedBoxId] = boxPositionsX[collidedBoxId] - 1;
-                                playerX = boxPositionsX[pushedBoxId] - 1;
-                                break;
-                            case Direction.Up:
-                                boxPositionsY[pushedBoxId] = boxPositionsY[collidedBoxId] + 1;
-                                playerY = boxPositionsY[pushedBoxId] + 1;
-                                break;
-                            case Direction.Down:
-                                boxPositionsY[pushedBoxId] = boxPositionsY[collidedBoxId] - 1;
-                                playerY = boxPositionsY[pushedBoxId] - 1;
-                                break;
-                            default:
-                                Console.Clear();
-                                Console.WriteLine($"[Error] 플레이어 이동 방향 데이터가 오류입니다. : {playerMoveDirection}");
-
-                                return;
-                        }
-                        break;
-                    }
-                }
+                MovePlayer(Key, ref x, ref y, ref moveDirection);
+                Update();
 
                 // 박스와 골의 처리
                 int boxOnGaolCount = 0;
@@ -298,13 +84,13 @@ namespace Sokoban
                 //골지점에 박스에 존재하나?
                 for (int goalId = 0; goalId < GOAL_COUNT; goalId++)   // 모든 골 지점에 대해서
                 {
+
+                    isBoxOnGoal[goalId] = false;
                     //박스가 있는지 체크한다
                     for (int boxId = 0; boxId < boxPositionsX.Length; boxId++)   // 모든 박스에 대해서
                     {
-                        //현재 박스가 goal위에 있는지 체크
-                        isBoxOnGoal[boxId] = false;
                         //박스가 있는지 체크한다.
-                        if (boxPositionsX[boxId] == goalPositionsX[goalId] && boxPositionsY[boxId] == goalPositionsY[goalId])
+                        if (IsCollided(boxPositionsX[boxId] , boxPositionsY[boxId] , goalPositionsX[goalId], goalPositionsY[goalId]))
                         {
                             ++boxOnGaolCount;
                             isBoxOnGoal[boxId] = true;  //박스가 골위에 있다는 사실을 저장 해둔다
@@ -313,37 +99,7 @@ namespace Sokoban
                         }
                     }
                 }
-                int Max (int a, int b)
-                {
-                    int result = (a > b) ? a : b;
-
-                    return result;
-                }
-                int Min (int a , int b)
-                {
-                    int result= (a < b) ? a : b;
-                    return result;
-                }
-                int VariadicMax(params int[] numbers)
-                {
-                    int result = numbers[0];
-                    for (int i =0; i< numbers.Length; ++i)
-                    {
-                        if (result < numbers[i])
-                        {
-                            result= numbers[i];
-                        }
-                    }
-                    return result;
-                }
-                void Randerobject(int x, int y ,string obj)
-                {
-                    Console.SetCursorPosition(x, y);
-                    Console.Write(obj);
-                }
-
-
-                    if (boxOnGaolCount == GOAL_COUNT)
+                if (boxOnGaolCount == GOAL_COUNT)
                 {
                     Console.Clear();
                     Console.WriteLine("Clear");
@@ -351,8 +107,252 @@ namespace Sokoban
                 }
 
 
-                //박스포지션과 골포지션을 비교했을 때처럼
+                int Max(int a, int b)
+                {
+                    int result = (a > b) ? a : b;
+
+                    return result;
+                }
+                int Min(int a, int b)
+                {
+                    int result = (a < b) ? a : b;
+                    return result;
+                }
+                int VariadicMax(params int[] numbers)
+                {
+                    int result = numbers[0];
+                    for (int i = 0; i < numbers.Length; ++i)
+                    {
+                        if (result < numbers[i])
+                        {
+                            result = numbers[i];
+                        }
+                    }
+                    return result;
+                }
+                void Randerobject(int x, int y, string obj)
+                {
+                    Console.SetCursorPosition(x, y);
+                    Console.Write(obj);
+                }
+                void Rander()
+                {
+                    Console.Clear();
+                    Randerobject(x, y, "P");
+                    //골을 그려준다
+                    for (int goalId = 0; goalId < GOAL_COUNT; ++goalId)
+                    {
+                        Randerobject(goalPositionsX[goalId], goalPositionsY[goalId], "G");
+                    }
+
+                    //박스를 그려준다 
+                    for (int i = 0; i < boxPositionsX.Length; ++i)
+                    {
+                        string boxsape = isBoxOnGoal[i] ? "O" : "B";
+                        Randerobject(boxPositionsX[i], boxPositionsY[i], boxsape);
+
+                    }
+                    //박스를 그릴때 판단하던 것을 골위에 박스가 존재하느지 체크할 떄 판단
+                    //판단지점이 다름 -> 데이터 저장 박스를 그릴때 어떤 boㅐl 객체를 생성 =>배열로전환
+
+                    //벽을 그려준다
+                    for (int wallId = 0; wallId < WALL_COUNT; ++wallId)
+                    {
+                        Randerobject(wallPositionsX[wallId], wallPositionsY[wallId], "W");
+                    }
+                }
+
+                bool IsCollided(int x1, int y1, int x2, int y2)
+                {
+                    if (x1 == x2 && y1 == y2)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                void MovePlayer(ConsoleKey key, ref int x, ref int y, ref Direction moveDirection)
+                {
+                    if (Key == ConsoleKey.LeftArrow)
+                    {
+                        x = Max(Min_X, x - 1);
+                        moveDirection = Direction.Left;
+                    }
+                    if (Key == ConsoleKey.RightArrow)
+                    {
+                        x = Min(Max_X, x + 1);
+                        moveDirection = Direction.Right;
+                    }
+                    if (Key == ConsoleKey.UpArrow)
+                    {
+                        y = Max(Min_Y, y - 1);
+                        moveDirection = Direction.Up;
+                    }
+                    if (Key == ConsoleKey.DownArrow)
+                    {
+                        y = Min(Max_Y, y + 1);
+                        moveDirection = Direction.Down;
+                    }
+                }
+                void Update()
+                {
+                    for (int wallId = 0; wallId < WALL_COUNT; ++wallId)
+                    {
+                        if (false == IsCollided(x, y, wallPositionsX[wallId], wallPositionsY[wallId]))
+                        {
+                            continue;
+                        }
+                        switch (moveDirection)
+                        {
+                            case Direction.Left:
+                                x = wallPositionsX[wallId] + 1;
+                                break;
+                            case Direction.Right:
+                                x = wallPositionsX[wallId] - 1;
+                                break;
+                            case Direction.Up:
+                                y = wallPositionsY[wallId] + 1;
+                                break;
+                            case Direction.Down:
+                                y = wallPositionsY[wallId] - 1;
+                                break;
+                            default:
+                                Console.Clear();
+                                Console.WriteLine($"[Error] 플레이오 이동 방향 데이터가 오류입니다.: {moveDirection}");
+
+                                break;
+                        }
+
+                    }
+
+
+                    //플레이어가 박스에 닿았을때 --일단 기술부채 1월 18일 상환 
+                    for (int i = 0; i < boxPositionsX.Length; ++i)
+                    {
+                        if (false == IsCollided(x, y, boxPositionsX[i], boxPositionsY[i]))
+                        {
+                            continue;
+                        }
+                        switch (moveDirection)
+                        {
+                            case Direction.Left:
+                                boxPositionsX[i] = Max(Min_X, boxPositionsX[i] - 1);
+                                x = boxPositionsX[i] + 1;
+                                break;
+
+
+                            case Direction.Right:
+                                boxPositionsX[i] = Min(boxPositionsX[i] + 1, Max_X);
+                                x = boxPositionsX[i] - 1;
+                                break;
+
+
+                            case Direction.Up:
+                                boxPositionsY[i] = Max(Min_Y, boxPositionsY[i] - 1);
+                                y = boxPositionsY[i] + 1;
+                                break;
+                            case Direction.Down:
+                                boxPositionsY[i] = Min(boxPositionsY[i] + 1, Max_Y);
+                                y = boxPositionsY[i] - 1;
+                                break;
+                            default:
+                                Console.Clear();
+                                Console.WriteLine($"[Error] 플레이오 이동 방향 데이터가 오류입니다.: {moveDirection}");
+
+                                break;
+                        }
+                        pushedBoxId = i;
+                        boxPositionsX[i] = boxPositionsX[i];
+                        boxPositionsY[i] = boxPositionsY[i];
+                    }
+
+
+                    //swith문 사용가능
+                    // 박스가 벽에 닿았을때 막히는 부분
+
+
+
+
+
+                    // 박스가 벽에 닿았을때   -- 기술부채 1월 18일 상환
+                    for (int i = 0; i < WALL_COUNT; ++i)
+                    {
+                        if (false == IsCollided(boxPositionsX[pushedBoxId], boxPositionsY[pushedBoxId], wallPositionsX[i], wallPositionsY[i]))
+                        {
+                            continue;
+                        }
+
+                        switch (moveDirection)
+                        {
+                            case Direction.Left:
+                                boxPositionsX[pushedBoxId] = wallPositionsX[i] + 1;
+                                x = boxPositionsX[pushedBoxId] + 1;
+                                break;
+                            case Direction.Right:
+                                boxPositionsX[pushedBoxId] = wallPositionsX[i] - 1;
+                                x = boxPositionsX[pushedBoxId] - 1;
+                                break;
+                            case Direction.Up:
+                                boxPositionsY[pushedBoxId] = wallPositionsY[i] + 1;
+                                y = boxPositionsY[pushedBoxId] + 1;
+                                break;
+                            case Direction.Down:
+                                boxPositionsY[pushedBoxId] = wallPositionsY[i] - 1;
+                                y = boxPositionsY[pushedBoxId] - 1;
+                                break;
+                            default:
+                                Console.Clear();
+                                Console.WriteLine($"[Error] 플레이오 이동 방향 데이터가 오류입니다.: {moveDirection}");
+
+                                return;
+                        }
+                        break;
+                    }
+                    // 박스 1을 밀어서 박스 2에 닿은 건지, 박스 2를 밀어서 박스 1에 닿은건지?
+                    for (int collidedBoxId = 0; collidedBoxId < boxPositionsX.Length; ++collidedBoxId)
+                    {
+                        if (pushedBoxId == collidedBoxId)
+                        {
+                            continue;
+                        }
+                        if (false == IsCollided(boxPositionsX[pushedBoxId], boxPositionsY[pushedBoxId], boxPositionsX[collidedBoxId], boxPositionsY[collidedBoxId]))
+                        {
+                            continue;
+                        }
+
+                        switch (moveDirection)
+                        {
+                            case Direction.Left:
+                                boxPositionsX[pushedBoxId] = boxPositionsX[collidedBoxId] + 1;
+                                x = boxPositionsX[pushedBoxId] + 1;
+                                break;
+                            case Direction.Right:
+                                boxPositionsX[pushedBoxId] = boxPositionsX[collidedBoxId] - 1;
+                                x = boxPositionsX[pushedBoxId] - 1;
+                                break;
+                            case Direction.Up:
+                                boxPositionsY[pushedBoxId] = boxPositionsY[collidedBoxId] + 1;
+                                y = boxPositionsY[pushedBoxId] + 1;
+                                break;
+                            case Direction.Down:
+                                boxPositionsY[pushedBoxId] = boxPositionsY[collidedBoxId] - 1;
+                                y = boxPositionsY[pushedBoxId] - 1;
+                                break;
+                            default:
+                                Console.Clear();
+                                Console.WriteLine($"[Error] 플레이어 이동 방향 데이터가 오류입니다. : {moveDirection}");
+
+                                return;
+                        }
+                        break;
+
+                    }
+                }
             }
         }
     }
 }
+
