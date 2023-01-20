@@ -34,26 +34,26 @@ namespace Sokoban
             const int GOAL_COUNT = 2;
 
 
-            int x = 0;
-            int y = 0;
+            int x = 3;
+            int y = 3;
 
-            const int Max_X = 20;
-            const int Max_Y = 10;
-            const int Min_X = 0;
-            const int Min_Y = 0;
+            const int Max_X = 70;
+            const int Max_Y = 20;
+            const int Min_X = 1;
+            const int Min_Y = 1;
 
             Direction moveDirection = Direction.None;
             //박스의 위치
             int[] boxPositionsX = { 5, 3 };
-            int[] boxPositionsY = { 5, 3 };
+            int[] boxPositionsY = { 5, 8 };
 
             // 플레이어가 무슨 박스를 밀고 있는지 저장하기 위한 변수
 
             int pushedBoxId = 0; // 1이면 박스1, 2면 박스2
 
             //벽을 만들자
-            int[] wallPositionsX = { 7, 10 };
-            int[] wallPositionsY = { 7, 8 };
+            int[] wallPositionsX = { 7, 10 ,23 ,13, 40, 30, 60, 40, 30};
+            int[] wallPositionsY = { 7, 8   ,17 ,12, 10 , 5  ,17 , 16 ,15};
 
             int WALL_COUNT = wallPositionsX.Length;
             //골을 그리자
@@ -154,6 +154,24 @@ namespace Sokoban
                     }
                     //박스를 그릴때 판단하던 것을 골위에 박스가 존재하느지 체크할 떄 판단
                     //판단지점이 다름 -> 데이터 저장 박스를 그릴때 어떤 boㅐl 객체를 생성 =>배열로전환
+                    //테두리를 그려준다.
+                    for (int i = 1; i < 21; ++i)
+                    {
+                        Randerobject(0, i, "X");
+                    }
+                    for (int i = 1; i < 21; ++i)
+                    {
+                        Randerobject(71, i, "X");
+                    }
+                    for (int i = 0; i < 72; ++i)
+                    {
+                        Randerobject(i, 0, "X");
+                    }
+                    for (int i = 0; i < 72; ++i)
+                    {
+                        Randerobject(i, 21, "X");
+                    }
+
 
                     //벽을 그려준다
                     for (int wallId = 0; wallId < WALL_COUNT; ++wallId)
