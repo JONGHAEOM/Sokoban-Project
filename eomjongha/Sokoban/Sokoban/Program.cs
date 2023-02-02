@@ -52,8 +52,8 @@ namespace Sokoban
             int pushedBoxId = 0; // 1이면 박스1, 2면 박스2
 
             //벽을 만들자
-            int[] wallPositionsX = { 7, 10 ,23 ,13, 40, 30, 60, 40, 30};
-            int[] wallPositionsY = { 7, 8   ,17 ,12, 10 , 5  ,17 , 16 ,15};
+            int[] wallPositionsX = { 7, 10, 23, 13, 40, 30, 60, 40, 30 };
+            int[] wallPositionsY = { 7, 8, 17, 12, 10, 5, 17, 16, 15 };
 
             int WALL_COUNT = wallPositionsX.Length;
             //골을 그리자
@@ -78,22 +78,25 @@ namespace Sokoban
                 MovePlayer(key, ref x, ref y, ref moveDirection);
                 Update();
 
-                
+
 
                 // 박스와 골의 처리
                 int boxOnGaolCount = 0;
+                int boxOnGoalCount = CountBoxOnGoal(in boxPositionsX, in boxPositionsY, ref isBoxOnGoal, in goalPositionsX, in goalPositionsY);
 
-                int CountBoxOnGoal(in int[] boxPositionX, in int[] boxPositionY, ref bool[]isBoxOnGoal,in int[] goalPositionsX,in int[] goalPositionsY)
+
+
+                int CountBoxOnGoal(in int[] boxPositionX, in int[] boxPositionY, ref bool[] isBoxOnGoal, in int[] goalPositionsX, in int[] goalPositionsY)
                 {
-                    int boxCount=boxPositionsX.Length;
-                    int goalCount =goalPositionsX.Length;
+                    int boxCount = boxPositionsX.Length;
+                    int goalCount = goalPositionsX.Length;
 
                     int result = 0;
-                    for (int boxId = 0; boxId<boxCount; ++boxId)
+                    for (int boxId = 0; boxId < boxCount; ++boxId)
                     {
                         isBoxOnGoal[boxId] = false;
 
-                        for (int goalld = 0; goalld<goalCount;++goalld)
+                        for (int goalld = 0; goalld < goalCount; ++goalld)
                         {
                             if (IsCollided(boxPositionsX[boxId], boxPositionsY[boxId], goalPositionsX[goalld], goalPositionsY[goalld]))
                             {
@@ -118,7 +121,7 @@ namespace Sokoban
                     for (int boxId = 0; boxId < boxPositionsX.Length; boxId++)   // 모든 박스에 대해서
                     {
                         //박스가 있는지 체크한다.
-                        if (IsCollided(boxPositionsX[boxId] , boxPositionsY[boxId] , goalPositionsX[goalId], goalPositionsY[goalId]))
+                        if (IsCollided(boxPositionsX[boxId], boxPositionsY[boxId], goalPositionsX[goalId], goalPositionsY[goalId]))
                         {
                             ++boxOnGaolCount;
                             isBoxOnGoal[boxId] = true;  //박스가 골위에 있다는 사실을 저장 해둔다
@@ -127,7 +130,8 @@ namespace Sokoban
                         }
                     }
                 }
-                if (boxOnGaolCount == GOAL_COUNT)
+
+                if (boxOnGoalCount == GOAL_COUNT)
                 {
                     Console.Clear();
                     Console.WriteLine("Clear");
@@ -226,21 +230,49 @@ namespace Sokoban
                 void MoveToUpOfTarget(out int y, in int target) => y = Math.Max(Min_Y, target - 1);
                 void MoveToDownOfTarget(out int y, in int target) => y = Math.Min(target + 1, Max_Y);
 
-                void OnCollision(Direction moveDirection,ref int objX,ref int objY,in int collidedObjX,in int collidedObjY)
+                void OnCollision(Action action)
+                {
+                    action();
+                }
+
+                void PushOut(Direction moveDirection, ref int objX, ref int objY, in int collidedObjX, in int collidedObjY)
                 {
                     switch (moveDirection)
                     {
                         case Direction.Left:
-                            MoveToRightOfTarget(out objX, in collidedObjX); 
+                            MoveToRightOfTarget(out objX, in collidedObjX);
                             break;
                         case Direction.Right:
                             MoveToLeftOfTarget(out objX, in collidedObjX);
                             break;
                         case Direction.Up:
-                            MoveToDownOfTarget(out objY, in collidedObjY); 
+                            MoveToDownOfTarget(out objY, in collidedObjY);
                             break;
                         case Direction.Down:
                             MoveToUpOfTarget(out objY, in collidedObjY);
+                            break;
+                    }
+                }
+
+                void MoveBox(Direction moveDirection, ref int boxPositionsX, ref int boxPositionsY, in int x, in int y)
+                {
+                    switch (moveDirection)
+                    {
+                        case Direction.Left:
+                            MoveToLeftOfTarget(out boxPositionsX, in x);
+
+                            break;
+                        case Direction.Right:
+                            MoveToRightOfTarget(out boxPositionsX, in x);
+
+                            break;
+                        case Direction.Up:
+                            MoveToUpOfTarget(out boxPositionsY, in y);
+
+                            break;
+                        case Direction.Down:
+                            MoveToDownOfTarget(out boxPositionsY, in y);
+
                             break;
                         default:
                             Console.Clear();
@@ -249,6 +281,9 @@ namespace Sokoban
                             break;
                     }
                 }
+
+
+
 
                 void MovePlayer(ConsoleKey key, ref int x, ref int y, ref Direction moveDirection)
                 {
@@ -281,8 +316,11 @@ namespace Sokoban
                         {
                             continue;
                         }
-                        OnCollision(moveDirection, ref x, ref y, in wallPositionsX[wallId], in wallPositionsY[wallId]);
+                        OnCollision(() =>
+                        {
+                            PushOut(moveDirection, ref x, ref y, wallPositionsX[wallId], wallPositionsY[wallId]);
 
+                        });
                     }
 
 
@@ -337,20 +375,20 @@ namespace Sokoban
                         {
                             continue;
                         }
-                        OnCollision(moveDirection, ref boxPositionsX[pushedBoxId], ref boxPositionsY[pushedBoxId], in wallPositionsX[i], in wallPositionsY[i]);
-                        OnCollision(moveDirection, ref x, ref y, in boxPositionsX[pushedBoxId], in boxPositionsY[pushedBoxId]);
+                        OnCollision(() =>
+                        {
+                            PushOut(moveDirection, ref boxPositionsX[pushedBoxId], ref boxPositionsY[pushedBoxId], wallPositionsX[i], wallPositionsY[i]);
 
-                        break;
+                            PushOut(moveDirection, ref x, ref y, boxPositionsX[pushedBoxId], boxPositionsY[pushedBoxId]);
+                        });
                     }
-
-                    
                     // 박스 1을 밀어서 박스 2에 닿은 건지, 박스 2를 밀어서 박스 1에 닿은건지?
-                    for (int i =0; i<boxPositionsX.Length; i++) 
+                    for (int i = 0; i < boxPositionsX.Length; i++)
                     {
                         //같은 박스라면 처리할 필요가 없다
                         if (pushedBoxId == i)
                         {
-                            continue; 
+                            continue;
                         }
 
                         if (false == IsCollided(boxPositionsX[pushedBoxId], boxPositionsY[pushedBoxId], boxPositionsX[i], boxPositionsY[i]))
@@ -358,11 +396,16 @@ namespace Sokoban
                             continue;
                         }
 
-                        OnCollision(moveDirection, ref boxPositionsX[pushedBoxId], ref boxPositionsY[pushedBoxId], in boxPositionsX[i], in boxPositionsY[i]);
-                        OnCollision(moveDirection, ref x, ref y, boxPositionsX[pushedBoxId], in boxPositionsY[pushedBoxId]);
-                    }
+                        OnCollision(() =>
+                        {
+                            PushOut(moveDirection, ref boxPositionsX[pushedBoxId], ref boxPositionsY[pushedBoxId], boxPositionsX[i], boxPositionsY[i]);
+                            PushOut(moveDirection, ref x, ref y, boxPositionsX[pushedBoxId], boxPositionsY[pushedBoxId]);
 
-                   
+                        });
+
+
+
+                    }
                 }
             }
         }
