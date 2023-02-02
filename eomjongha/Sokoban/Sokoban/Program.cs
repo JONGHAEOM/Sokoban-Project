@@ -72,15 +72,43 @@ namespace Sokoban
                 Rander();
 
                 // ProcessInput
-                ConsoleKey Key = Console.ReadKey().Key;
+                ConsoleKey key = Console.ReadKey().Key;
 
                 // Update
-                MovePlayer(Key, ref x, ref y, ref moveDirection);
+                MovePlayer(key, ref x, ref y, ref moveDirection);
                 Update();
+
+                
 
                 // 박스와 골의 처리
                 int boxOnGaolCount = 0;
 
+                int CountBoxOnGoal(in int[] boxPositionX, in int[] boxPositionY, ref bool[]isBoxOnGoal,in int[] goalPositionsX,in int[] goalPositionsY)
+                {
+                    int boxCount=boxPositionsX.Length;
+                    int goalCount =goalPositionsX.Length;
+
+                    int result = 0;
+                    for (int boxId = 0; boxId<boxCount; ++boxId)
+                    {
+                        isBoxOnGoal[boxId] = false;
+
+                        for (int goalld = 0; goalld<goalCount;++goalld)
+                        {
+                            if (IsCollided(boxPositionsX[boxId], boxPositionsY[boxId], goalPositionsX[goalld], goalPositionsY[goalld]))
+                            {
+                                ++result;
+
+                                isBoxOnGoal[boxId] = true;
+
+                                break;
+                            }
+                        }
+                    }
+
+                    return result;
+
+                }
                 //골지점에 박스에 존재하나?
                 for (int goalId = 0; goalId < GOAL_COUNT; goalId++)   // 모든 골 지점에 대해서
                 {
@@ -192,24 +220,54 @@ namespace Sokoban
                     }
                 }
 
+                //Move to 시리즈 
+                void MoveToLeftOfTarget(out int x, in int target) => x = Math.Max(Min_X, target - 1);
+                void MoveToRightOfTarget(out int x, in int target) => x = Math.Min(target + 1, Max_X);
+                void MoveToUpOfTarget(out int y, in int target) => y = Math.Max(Min_Y, target - 1);
+                void MoveToDownOfTarget(out int y, in int target) => y = Math.Min(target + 1, Max_Y);
+
+                void OnCollision(Direction moveDirection,ref int objX,ref int objY,in int collidedObjX,in int collidedObjY)
+                {
+                    switch (moveDirection)
+                    {
+                        case Direction.Left:
+                            MoveToRightOfTarget(out objX, in collidedObjX); 
+                            break;
+                        case Direction.Right:
+                            MoveToLeftOfTarget(out objX, in collidedObjX);
+                            break;
+                        case Direction.Up:
+                            MoveToDownOfTarget(out objY, in collidedObjY); 
+                            break;
+                        case Direction.Down:
+                            MoveToUpOfTarget(out objY, in collidedObjY);
+                            break;
+                        default:
+                            Console.Clear();
+                            Console.WriteLine($"[Error] 플레이오 이동 방향 데이터가 오류입니다.: {moveDirection}");
+
+                            break;
+                    }
+                }
+
                 void MovePlayer(ConsoleKey key, ref int x, ref int y, ref Direction moveDirection)
                 {
-                    if (Key == ConsoleKey.LeftArrow)
+                    if (key == ConsoleKey.LeftArrow)
                     {
                         x = Max(Min_X, x - 1);
                         moveDirection = Direction.Left;
                     }
-                    if (Key == ConsoleKey.RightArrow)
+                    if (key == ConsoleKey.RightArrow)
                     {
                         x = Min(Max_X, x + 1);
                         moveDirection = Direction.Right;
                     }
-                    if (Key == ConsoleKey.UpArrow)
+                    if (key == ConsoleKey.UpArrow)
                     {
                         y = Max(Min_Y, y - 1);
                         moveDirection = Direction.Up;
                     }
-                    if (Key == ConsoleKey.DownArrow)
+                    if (key == ConsoleKey.DownArrow)
                     {
                         y = Min(Max_Y, y + 1);
                         moveDirection = Direction.Down;
@@ -223,26 +281,7 @@ namespace Sokoban
                         {
                             continue;
                         }
-                        switch (moveDirection)
-                        {
-                            case Direction.Left:
-                                x = wallPositionsX[wallId] + 1;
-                                break;
-                            case Direction.Right:
-                                x = wallPositionsX[wallId] - 1;
-                                break;
-                            case Direction.Up:
-                                y = wallPositionsY[wallId] + 1;
-                                break;
-                            case Direction.Down:
-                                y = wallPositionsY[wallId] - 1;
-                                break;
-                            default:
-                                Console.Clear();
-                                Console.WriteLine($"[Error] 플레이오 이동 방향 데이터가 오류입니다.: {moveDirection}");
-
-                                break;
-                        }
+                        OnCollision(moveDirection, ref x, ref y, in wallPositionsX[wallId], in wallPositionsY[wallId]);
 
                     }
 
@@ -257,24 +296,20 @@ namespace Sokoban
                         switch (moveDirection)
                         {
                             case Direction.Left:
-                                boxPositionsX[i] = Max(Min_X, boxPositionsX[i] - 1);
-                                x = boxPositionsX[i] + 1;
+                                MoveToLeftOfTarget(out boxPositionsX[i], in x);
+
                                 break;
-
-
                             case Direction.Right:
-                                boxPositionsX[i] = Min(boxPositionsX[i] + 1, Max_X);
-                                x = boxPositionsX[i] - 1;
+                                MoveToRightOfTarget(out boxPositionsX[i], in x);
+
                                 break;
-
-
                             case Direction.Up:
-                                boxPositionsY[i] = Max(Min_Y, boxPositionsY[i] - 1);
-                                y = boxPositionsY[i] + 1;
+                                MoveToUpOfTarget(out boxPositionsY[i], in y);
+
                                 break;
                             case Direction.Down:
-                                boxPositionsY[i] = Min(boxPositionsY[i] + 1, Max_Y);
-                                y = boxPositionsY[i] - 1;
+                                MoveToDownOfTarget(out boxPositionsY[i], in y);
+
                                 break;
                             default:
                                 Console.Clear();
@@ -302,72 +337,32 @@ namespace Sokoban
                         {
                             continue;
                         }
+                        OnCollision(moveDirection, ref boxPositionsX[pushedBoxId], ref boxPositionsY[pushedBoxId], in wallPositionsX[i], in wallPositionsY[i]);
+                        OnCollision(moveDirection, ref x, ref y, in boxPositionsX[pushedBoxId], in boxPositionsY[pushedBoxId]);
 
-                        switch (moveDirection)
-                        {
-                            case Direction.Left:
-                                boxPositionsX[pushedBoxId] = wallPositionsX[i] + 1;
-                                x = boxPositionsX[pushedBoxId] + 1;
-                                break;
-                            case Direction.Right:
-                                boxPositionsX[pushedBoxId] = wallPositionsX[i] - 1;
-                                x = boxPositionsX[pushedBoxId] - 1;
-                                break;
-                            case Direction.Up:
-                                boxPositionsY[pushedBoxId] = wallPositionsY[i] + 1;
-                                y = boxPositionsY[pushedBoxId] + 1;
-                                break;
-                            case Direction.Down:
-                                boxPositionsY[pushedBoxId] = wallPositionsY[i] - 1;
-                                y = boxPositionsY[pushedBoxId] - 1;
-                                break;
-                            default:
-                                Console.Clear();
-                                Console.WriteLine($"[Error] 플레이오 이동 방향 데이터가 오류입니다.: {moveDirection}");
-
-                                return;
-                        }
                         break;
                     }
+
+                    
                     // 박스 1을 밀어서 박스 2에 닿은 건지, 박스 2를 밀어서 박스 1에 닿은건지?
-                    for (int collidedBoxId = 0; collidedBoxId < boxPositionsX.Length; ++collidedBoxId)
+                    for (int i =0; i<boxPositionsX.Length; i++) 
                     {
-                        if (pushedBoxId == collidedBoxId)
+                        //같은 박스라면 처리할 필요가 없다
+                        if (pushedBoxId == i)
+                        {
+                            continue; 
+                        }
+
+                        if (false == IsCollided(boxPositionsX[pushedBoxId], boxPositionsY[pushedBoxId], boxPositionsX[i], boxPositionsY[i]))
                         {
                             continue;
                         }
-                        if (false == IsCollided(boxPositionsX[pushedBoxId], boxPositionsY[pushedBoxId], boxPositionsX[collidedBoxId], boxPositionsY[collidedBoxId]))
-                        {
-                            continue;
-                        }
 
-                        switch (moveDirection)
-                        {
-                            case Direction.Left:
-                                boxPositionsX[pushedBoxId] = boxPositionsX[collidedBoxId] + 1;
-                                x = boxPositionsX[pushedBoxId] + 1;
-                                break;
-                            case Direction.Right:
-                                boxPositionsX[pushedBoxId] = boxPositionsX[collidedBoxId] - 1;
-                                x = boxPositionsX[pushedBoxId] - 1;
-                                break;
-                            case Direction.Up:
-                                boxPositionsY[pushedBoxId] = boxPositionsY[collidedBoxId] + 1;
-                                y = boxPositionsY[pushedBoxId] + 1;
-                                break;
-                            case Direction.Down:
-                                boxPositionsY[pushedBoxId] = boxPositionsY[collidedBoxId] - 1;
-                                y = boxPositionsY[pushedBoxId] - 1;
-                                break;
-                            default:
-                                Console.Clear();
-                                Console.WriteLine($"[Error] 플레이어 이동 방향 데이터가 오류입니다. : {moveDirection}");
-
-                                return;
-                        }
-                        break;
-
+                        OnCollision(moveDirection, ref boxPositionsX[pushedBoxId], ref boxPositionsY[pushedBoxId], in boxPositionsX[i], in boxPositionsY[i]);
+                        OnCollision(moveDirection, ref x, ref y, boxPositionsX[pushedBoxId], in boxPositionsY[pushedBoxId]);
                     }
+
+                   
                 }
             }
         }
